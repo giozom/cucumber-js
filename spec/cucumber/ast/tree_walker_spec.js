@@ -278,6 +278,18 @@ describe("Cucumber.Ast.TreeWalker", function() {
         expect(listener[hearMethod]).toHaveBeenCalledWith(parameter1, parameter2, parameter3);
       });
     });
+
+    it("does not tell a listener when it is not interested in that message", function() {
+      var dumbListener = createSpy("A listener listening to nothing (it has no headXXX() method");
+      var failed       = false;
+      listeners.push(dumbListener);
+      try {
+	treeWalker.broadcastMessage(message);
+      } catch(err) {
+	failed = true;
+      }
+      expect(failed).toBeFalsy();
+    });
   });
 
   describe("lookupStepDefinitionByName()", function() {
