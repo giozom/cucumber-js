@@ -113,7 +113,7 @@ describe("Cucumber.Ast.TreeWalker", function() {
       spyOn(treeWalker, 'broadcastUserFunction');
     });
 
-    it("broadcasts the scenario's visit before and after it", function() {
+    it("broadcasts the scenario's visit", function() {
       treeWalker.visitScenario(scenario, callback);
       expect(treeWalker.broadcastUserFunction).toHaveBeenCalled();
       expect(treeWalker.broadcastUserFunction).
@@ -202,19 +202,19 @@ describe("Cucumber.Ast.TreeWalker", function() {
 
   describe("broadcastUserFunction()", function() {
     var message, userFunction, callback, argumentList;
-    var payload, wrappedUserFunction;
+    var payload, userFunctionWrapper;
 
     beforeEach(function() {
       message             = "SomeEventMessage";
       userFunction        = createSpy("User function");
       callback            = createSpy("Main callback");
       payload             = createSpy("Message payload");
-      wrappedUserFunction = createSpy("Wrapped user function");
+      userFunctionWrapper = createSpy("User function wrapper");
       argumentList        = [message, userFunction, callback];
       spyOn(treeWalker, 'extractMessagePayloadFromArguments').andReturn(payload);
       spyOn(treeWalker, 'extractUserFunctionFromArguments').andReturn(userFunction);
       spyOn(treeWalker, 'extractCallbackFromArguments').andReturn(callback);
-      spyOn(treeWalker, 'wrapUserFunctionAndAfterMessageBroadcast').andReturn(wrappedUserFunction);
+      spyOn(treeWalker, 'wrapUserFunctionAndAfterMessageBroadcast').andReturn(userFunctionWrapper);
       spyOn(treeWalker, 'broadcastBeforeMessage');
     });
 
@@ -238,9 +238,9 @@ describe("Cucumber.Ast.TreeWalker", function() {
       expect(treeWalker.wrapUserFunctionAndAfterMessageBroadcast).toHaveBeenCalledWith(userFunction, payload, callback);
     });
 
-    it("broadcasts the before message with the wrapped user function and after message broadcast as callback", function() {
+    it("broadcasts a before message with the user function and after message broadcast wrapper as callback", function() {
       treeWalker.broadcastUserFunction(message, userFunction, callback);
-      expect(treeWalker.broadcastBeforeMessage).toHaveBeenCalledWith(payload, wrappedUserFunction);
+      expect(treeWalker.broadcastBeforeMessage).toHaveBeenCalledWith(payload, userFunctionWrapper);
     });
   });
 
@@ -356,6 +356,69 @@ describe("Cucumber.Ast.TreeWalker", function() {
     });
   });
 
+  describe("wrapUserFunctionAndAfterMessageBroadcast()", function() {
+    var userFunction, payload, callback;
+    var broadcastAfterMessageWrapper;
+
+    beforeEach(function() {
+      userFunction                 = createSpy("User function");
+      payload                      = createSpy("Message payload");
+      callback                     = createSpy("Callback");
+      broadcastAfterMessageWrapper = createSpy("After message broadcast wrapper");
+      spyOn(treeWalker, 'wrapAfterMessageBroadcast').andReturn(broadcastAfterMessageWrapper);
+    });
+
+    it("wraps the after message broadcast to use as a callback", function() {
+      treeWalker.wrapUserFunctionAndAfterMessageBroadcast(userFunction, payload, callback);
+      expect(treeWalker.wrapAfterMessageBroadcast).toHaveBeenCalledWith(payload, callback);
+    });
+
+    it("returns a wrapper function", function() {
+      var returned = treeWalker.wrapUserFunctionAndAfterMessageBroadcast(userFunction, payload, callback);
+      expect(returned).toBeAFunction();
+    });
+
+    describe("returned wrapper function", function() {
+      var wrapper;
+
+      beforeEach(function() {
+        wrapper = treeWalker.wrapUserFunctionAndAfterMessageBroadcast(userFunction, payload, callback);
+      });
+
+      it("calls the user function with the after message broadcast wrapper", function() {
+        wrapper();
+        expect(userFunction).toHaveBeenCalledWith(broadcastAfterMessageWrapper);
+      });
+    });
+  });
+
+  describe("wrapAfterMessageBroadcast()", function() {
+    var payload, callback;
+
+    beforeEach(function() {
+      payload  = createSpy("Message payload");
+      callback = createSpy("Callback");
+    });
+
+    it("returns a function", function() {
+      var returned = treeWalker.wrapAfterMessageBroadcast(payload, callback);
+      expect(returned).toBeAFunction();
+    });
+
+    describe("returned wrapper function", function() {
+      var wrapper;
+
+      beforeEach(function() {
+        wrapper = treeWalker.wrapAfterMessageBroadcast(payload, callback);
+        spyOn(treeWalker, 'broadcastAfterMessage');;
+      });
+
+      it("broadcasts an after message with the payload and the received callback as callback", function() {
+        wrapper();
+        expect(treeWalker.broadcastAfterMessage).toHaveBeenCalledWith(payload, callback);
+      });
+    });
+  });
 
   /*
   describe("broadcastUserFunction()", function() {
