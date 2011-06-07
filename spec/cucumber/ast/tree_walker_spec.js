@@ -273,33 +273,6 @@ describe("Cucumber.Ast.TreeWalker", function() {
     });
   });
 
-  describe("extractUserFunctionFromArguments()", function() {
-    var argumentsObject, userFunction, nonPayloadArguments;
-
-    beforeEach(function() {
-      userFunction        = createSpy("User function");
-      argumentsObject     = createSpy("Arguments object");
-      nonPayloadArguments = createSpyWithStubs("Non payload arguments", {unshift: userFunction});
-      spyOn(treeWalker, 'extractNonMessagePayloadArgumentsFromArguments').
-        andReturn(nonPayloadArguments);
-    });
-
-    it("extracts the non-payload arguments from the arguments object", function() {
-      treeWalker.extractUserFunctionFromArguments(argumentsObject);
-      expect(treeWalker.extractNonMessagePayloadArgumentsFromArguments).toHaveBeenCalledWith(argumentsObject);
-    });
-
-    it("shifts the first argument from the non-payload arguments", function() {
-      treeWalker.extractUserFunctionFromArguments(argumentsObject);
-      expect(nonPayloadArguments.unshift).toHaveBeenCalled();
-    });
-
-    it("returns the unshifted argument", function() {
-      var returned = treeWalker.extractUserFunctionFromArguments(argumentsObject);
-      expect(returned).toBe(userFunction);
-    });
-  });
-
   describe("extractNonMessagePayloadArgumentsFromArguments()", function() {
     var argumentsObject, argumentsArray, nonPayloadArguments;
 
@@ -328,6 +301,61 @@ describe("Cucumber.Ast.TreeWalker", function() {
       expect(returned).toBe(nonPayloadArguments);
     });
   });
+
+  describe("extractUserFunctionFromArguments()", function() {
+    var argumentsObject, userFunction, nonPayloadArguments;
+
+    beforeEach(function() {
+      userFunction        = createSpy("User function");
+      argumentsObject     = createSpy("Arguments object");
+      nonPayloadArguments = createSpyWithStubs("Non payload arguments", {unshift: userFunction});
+      spyOn(treeWalker, 'extractNonMessagePayloadArgumentsFromArguments').
+        andReturn(nonPayloadArguments);
+    });
+
+    it("extracts the non-payload arguments from the arguments object", function() {
+      treeWalker.extractUserFunctionFromArguments(argumentsObject);
+      expect(treeWalker.extractNonMessagePayloadArgumentsFromArguments).toHaveBeenCalledWith(argumentsObject);
+    });
+
+    it("shifts the first argument from the non-payload arguments", function() {
+      treeWalker.extractUserFunctionFromArguments(argumentsObject);
+      expect(nonPayloadArguments.unshift).toHaveBeenCalled();
+    });
+
+    it("returns the unshifted argument", function() {
+      var returned = treeWalker.extractUserFunctionFromArguments(argumentsObject);
+      expect(returned).toBe(userFunction);
+    });
+  });
+
+  describe("extractCallbackFromArguments()", function() {
+    var argumentsObject, callback, nonPayloadArguments;
+
+    beforeEach(function() {
+      callback            = createSpy("User function");
+      argumentsObject     = createSpy("Arguments object");
+      nonPayloadArguments = createSpyWithStubs("Non payload arguments", {pop: callback});
+      spyOn(treeWalker, 'extractNonMessagePayloadArgumentsFromArguments').
+        andReturn(nonPayloadArguments);
+    });
+
+    it("extracts the non-payload arguments from the arguments object", function() {
+      treeWalker.extractCallbackFromArguments(argumentsObject);
+      expect(treeWalker.extractNonMessagePayloadArgumentsFromArguments).toHaveBeenCalledWith(argumentsObject);
+    });
+
+    it("pops the last argument out of the non-payload arguments", function() {
+      treeWalker.extractCallbackFromArguments(argumentsObject);
+      expect(nonPayloadArguments.pop).toHaveBeenCalled();
+    });
+
+    it("returns the unshifted argument", function() {
+      var returned = treeWalker.extractCallbackFromArguments(argumentsObject);
+      expect(returned).toBe(callback);
+    });
+  });
+
 
   /*
   describe("broadcastUserFunction()", function() {
