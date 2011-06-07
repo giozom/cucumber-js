@@ -244,7 +244,34 @@ describe("Cucumber.Ast.TreeWalker", function() {
     });
   });
 
+  describe("extractMessagePayloadFromArguments()", function() {
+    var argumentsList, argumentsArray, payload;
 
+    beforeEach(function() {
+      payload        = createSpy("Payload");
+      argumentsList  = [createSpy("An argument"), createSpy("Another argument")];
+      argumentsArray = createSpyWithStubs("Cucumber util arguments array", {slice: payload});
+      spyOn(Cucumber.Util, 'Arguments').andReturn(argumentsArray);
+    });
+
+    it("transforms the arguments object into an array", function() {
+      treeWalker.extractMessagePayloadFromArguments.apply(treeWalker, argumentsList);
+      expect(Cucumber.Util.Arguments).toHaveBeenCalledWith(argumentsList);
+    });
+
+    it("slices the non-payload parameters off", function() {
+      treeWalker.extractMessagePayloadFromArguments.apply(treeWalker, argumentsList);
+      expect(argumentsArray.slice).toHaveBeenCalledWith(
+        Cucumber.Ast.TreeWalker.NON_PAYLOAD_LEADING_PARAMETERS_COUNT,
+        -Cucumber.Ast.TreeWalker.NON_PAYLOAD_TRAILING_PARAMETERS_COUNT
+      );
+    });
+
+    it("returns the sliced array", function() {
+      expect(treeWalker.extractMessagePayloadFromArguments.apply(treeWalker, argumentsList)).
+        toBe(payload);
+    });
+  });
 
   /*
   describe("broadcastUserFunction()", function() {
