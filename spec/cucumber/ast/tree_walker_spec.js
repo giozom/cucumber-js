@@ -245,22 +245,22 @@ describe("Cucumber.Ast.TreeWalker", function() {
   });
 
   describe("extractMessagePayloadFromArguments()", function() {
-    var argumentsList, argumentsArray, payload;
+    var argumentsObject, argumentsArray, payload;
 
     beforeEach(function() {
-      payload        = createSpy("Payload");
-      argumentsList  = [createSpy("An argument"), createSpy("Another argument")];
-      argumentsArray = createSpyWithStubs("Cucumber util arguments array", {slice: payload});
+      payload         = createSpy("Payload");
+      argumentsObject = createSpy("Arguments object");
+      argumentsArray  = createSpyWithStubs("Cucumber util arguments array", {slice: payload});
       spyOn(Cucumber.Util, 'Arguments').andReturn(argumentsArray);
     });
 
     it("transforms the arguments object into an array", function() {
-      treeWalker.extractMessagePayloadFromArguments.apply(treeWalker, argumentsList);
-      expect(Cucumber.Util.Arguments).toHaveBeenCalledWith(argumentsList);
+      treeWalker.extractMessagePayloadFromArguments(argumentsObject);
+      expect(Cucumber.Util.Arguments).toHaveBeenCalledWith(argumentsObject);
     });
 
     it("slices the non-payload parameters off", function() {
-      treeWalker.extractMessagePayloadFromArguments.apply(treeWalker, argumentsList);
+      treeWalker.extractMessagePayloadFromArguments(argumentsObject);
       expect(argumentsArray.slice).toHaveBeenCalledWith(
         Cucumber.Ast.TreeWalker.NON_PAYLOAD_LEADING_PARAMETERS_COUNT,
         -Cucumber.Ast.TreeWalker.NON_PAYLOAD_TRAILING_PARAMETERS_COUNT
@@ -268,8 +268,43 @@ describe("Cucumber.Ast.TreeWalker", function() {
     });
 
     it("returns the sliced array", function() {
-      expect(treeWalker.extractMessagePayloadFromArguments.apply(treeWalker, argumentsList)).
+      expect(treeWalker.extractMessagePayloadFromArguments(argumentsObject)).
         toBe(payload);
+    });
+  });
+
+  describe("extractUserFunctionFromArguments()", function() {
+    var argumentsObject, argumentsArray, userFunction, nonPayloadArguments;
+
+    beforeEach(function() {
+      userFunction        = createSpy("User function");
+      argumentsObject     = createSpy("Arguments object");
+      nonPayloadArguments = createSpyWithStubs("Non payload arguments", {unshift: userFunction});
+      argumentsArray      = createSpyWithStubs("Cucumber util arguments array",
+                                               {slice: nonPayloadArguments});
+      spyOn(Cucumber.Util, 'Arguments').andReturn(argumentsArray);
+    });
+
+    it("transforms the arguments object into an array", function() {
+      treeWalker.extractUserFunctionFromArguments(argumentsObject);
+      expect(Cucumber.Util.Arguments).toHaveBeenCalledWith(argumentsObject);
+    });
+
+    it("slices the payload parameters off", function() {
+      treeWalker.extractUserFunctionFromArguments(argumentsObject);
+      expect(argumentsArray.slice).toHaveBeenCalledWith(
+        -Cucumber.Ast.TreeWalker.NON_PAYLOAD_TRAILING_PARAMETERS_COUNT
+      );
+    });
+
+    it("shifts the first argument from the non-payload arguments", function() {
+      treeWalker.extractUserFunctionFromArguments(argumentsObject);
+      expect(nonPayloadArguments.unshift).toHaveBeenCalled();
+    });
+
+    it("returns the unshifted argument", function() {
+      var returned = treeWalker.extractUserFunctionFromArguments(argumentsObject);
+      expect(returned).toBe(userFunction);
     });
   });
 
