@@ -1,7 +1,7 @@
 require('../../support/spec_helper');
 
 describe("Cucumber.Ast.TreeWalker", function() {
-  var Cucumber     = require('cucumber');
+  var Cucumber = require('cucumber');
   var treeWalker, features, supportCodeLibrary, listeners;
 
   beforeEach(function() {
